@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zahlenreihen-Auflösung – Meistermodus</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .screen {
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    .hidden {
+      display: none;
+    }
+    h1, h2 {
+      margin-bottom: 16px;
+      color: #2c3e50;
+    }
+    p { margin: 6px 0; }
+    #game-info, #score, #stats, #timer {
+      font-size: 20px;
+      margin: 8px 0;
+    }
+    #grid {
+      display: inline-grid;
+      grid-template-columns: repeat(4, 70px);
+      grid-template-rows: repeat(4, 70px);
+      gap: 6px;
+      margin: 15px auto;
+    }
+    .cell {
+      width: 70px;
+      height: 70px;
+      background: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      border-radius: 8px;
+    }
+    .block-1 { background: #ff6b6b; color: white; }
+    .block-2 { background: #4ecdc4; color: white; }
+    .block-3 { background: #45b7d1; color: white; }
+    .block-4 { background: #f9ca24; color: black; }
+    .block-5 { background: #a29bfe; color: white; }
+    .block-6 { background: #fd79a8; color: white; }
+    .block-7 { background: #00b894; color: white; }
+    .block-8 { background: #fdcb6e; color: black; }
+    .block-9 { background: #e17055; color: white; }
+    .block-10 { background: #6c5ce7; color: white; }
+    .block-11 { background: #00cec9; color: white; }
+    .block-12 { background: #ffeaa7; color: black; }
+    .block-13 { background: #d63031; color: white; }
+    .block-14 { background: #e84393; color: white; }
+    .block-15 { background: #2d3436; color: white; }
+
+    button {
+      padding: 12px 24px;
+      font-size: 18px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .stat-row {
+      font-size: 16px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <!-- Start-Bildschirm -->
+  <div id="screen-start" class="screen">
+    <h1>🔢 Zahlenreihen-Auflösung</h1>
+    <p>Klicke die Blöcke in der Reihenfolge <strong>1 → 2 → 3 → ...</strong></p>
+    <p>Mehr Blöcke, weniger Zeit – wirst du Meister?</p>
+    
+    <div class="stat-row">Highscore: <strong id="hs-start">0</strong></div>
+    <div class="stat-row">Schnellste Runde: <strong id="fastest-start">–</strong></div>
+    <div class="stat-row">Meiste Blöcke: <strong id="most-blocks-start">0</strong></div>
+    
+    <button id="start-btn">▶️ Spiel starten</button>
+  </div>
+
+  <!-- Spiel-Bildschirm -->
+  <div id="screen-game" class="screen hidden">
+    <div id="game-info">Runde: <span id="round">1</span></div>
+    <div id="score">Punkte: <span id="score-value">0</span></div>
+    <div id="timer">Verbleibende Zeit: <span id="time-left">20</span>s</div>
+    <div id="grid"></div>
+  </div>
+
+  <!-- Ende-Bildschirm -->
+  <div id="screen-end" class="screen hidden">
+    <h2 id="end-title">⏰ Spiel vorbei!</h2>
+    <p>Punkte: <strong><span id="final-score">0</span></strong></p>
+    <p>Erreichte Runde: <strong><span id="end-round">1</span></strong></p>
+    
+    <div class="stat-row">Highscore: <strong id="hs-end">0</strong></div>
+    <div class="stat-row">Schnellste Runde: <strong id="fastest-end">–</strong> Sek</div>
+    <div class="stat-row">Meiste Blöcke: <strong id="most-blocks-end">0</strong></div>
+    
+    <button id="restart-btn">🔄 Nochmal spielen</button>
+  </div>
+
+  <script>
+    const SIZE = 4;
+    let grid = [];
+    let nextExpected = 1;
+    let score = 0;
+    let currentRound = 1;
+    let maxRound = 12;
+    let timeLeft = 0;
+    let timerInterval = null;
+    let roundStartTime = 0;
+
+    // Speicherschlüssel
+    const HS_KEY = 'ns_highscore';
+    const FASTEST_KEY = 'ns_fastest_round'; // in Sekunden (kleiner = besser)
+    const MOST_BLOCKS_KEY = 'ns_most_blocks';
+
+    const blockClasses = {
+      1: 'block-1', 2: 'block-2', 3: 'block-3', 4: 'block-4',
+      5: 'block-5', 6: 'block-6', 7: 'block-7', 8: 'block-8',
+      9: 'block-9', 10: 'block-10', 11: 'block-11', 12: 'block-12',
+      13: 'block-13', 14: 'block-14', 15: 'block-15'
+    };
+
+    // Statistik laden
+    function loadStats() {
+      return {
+        highscore: parseInt(localStorage.getItem(HS_KEY)) || 0,
+        fastestRound: parseFloat(localStorage.getItem(FASTEST_KEY)) || Infinity,
+        mostBlocks: parseInt(localStorage.getItem(MOST_BLOCKS_KEY)) || 0
+      };
+    }
+
+    function saveStat(key, value) {
+      localStorage.setItem(key, String(value));
+    }
+
+    function updateStartScreen() {
+      const stats = loadStats();
+      document.getElementById('hs-start').textContent = stats.highscore;
+      document.getElementById('fastest-start').textContent = 
+        stats.fastestRound === Infinity ? '–' : stats.fastestRound;
+      document.getElementById('most-blocks-start').textContent = stats.mostBlocks;
+    }
+
+    function showScreen(id) {
+      document.getElementById('screen-start').classList.add('hidden');
+      document.getElementById('screen-game').classList.add('hidden');
+      document.getElementById('screen-end').classList.add('hidden');
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function placeBlocks(count) {
+      grid = Array(SIZE).fill().map(() => Array(SIZE).fill(0));
+      const used = new Set();
+      for (let id = 1; id <= count && id <= 15; id++) {
+        let r, c;
+        do {
+          r = Math.floor(Math.random() * SIZE);
+          c = Math.floor(Math.random() * SIZE);
+        } while (used.has(`${r},${c}`));
+        used.add(`${r},${c}`);
+        grid[r][c] = id;
+      }
+    }
+
+    function getTimeLimit(round) {
+      return Math.max(5, 20 - (round - 1) * 2);
+    }
+
+    function startRound(round) {
+      const blockCount = Math.min(round + 3, 15);
+      placeBlocks(blockCount);
+      nextExpected = 1;
+      timeLeft = getTimeLimit(round);
+      document.getElementById('round').textContent = round;
+      document.getElementById('time-left').textContent = timeLeft;
+      roundStartTime = Date.now();
+
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('time-left').textContent = timeLeft;
+        if (timeLeft <= 0) {
+          endGame(false);
+        }
+      }, 1000);
+
+      render();
+    }
+
+    function render() {
+      const gridEl = document.getElementById('grid');
+      gridEl.innerHTML = '';
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          const val = grid[r][c];
+          if (val !== 0 && blockClasses[val]) {
+            cell.classList.add(blockClasses[val]);
+            cell.textContent = val;
+            cell.addEventListener('click', () => handleClick(r, c, val));
+          }
+          gridEl.appendChild(cell);
+        }
+      }
+    }
+
+    function handleClick(r, c, value) {
+      if (value === nextExpected) {
+        grid[r][c] = 0;
+        const basePoints = 25;
+        const speedBonus = timeLeft;
+        score += basePoints + speedBonus;
+        document.getElementById('score-value').textContent = score;
+        nextExpected++;
+
+        const blockCount = Math.min(currentRound + 3, 15);
+        if (nextExpected > blockCount) {
+          // Runde abgeschlossen – Zeit messen
+          const roundTime = Math.round((Date.now() - roundStartTime) / 1000);
+          checkRoundStats(roundTime, blockCount);
+
+          clearInterval(timerInterval);
+          if (currentRound >= maxRound) {
+            setTimeout(() => endGame(true), 300);
+          } else {
+            currentRound++;
+            setTimeout(() => startRound(currentRound), 500);
+          }
+        } else {
+          render();
+        }
+      }
+    }
+
+    function checkRoundStats(roundTimeSec, blockCount) {
+      const stats = loadStats();
+
+      // Schnellste Runde (niedrigste Zeit gewinnt)
+      if (roundTimeSec < stats.fastestRound) {
+        saveStat(FASTEST_KEY, roundTimeSec);
+      }
+
+      // Meiste Blöcke insgesamt in einer Runde
+      if (blockCount > stats.mostBlocks) {
+        saveStat(MOST_BLOCKS_KEY, blockCount);
+      }
+    }
+
+    function endGame(won) {
+      clearInterval(timerInterval);
+
+      const stats = loadStats();
+      const finalScore = score;
+      const blocksThisRun = Math.min(currentRound + 3, 15);
+
+      // Highscore aktualisieren
+      if (finalScore > stats.highscore) {
+        saveStat(HS_KEY, finalScore);
+      }
+
+      // Meiste Blöcke (falls nicht schon in checkRoundStats erfasst)
+      if (blocksThisRun > stats.mostBlocks) {
+        saveStat(MOST_BLOCKS_KEY, blocksThisRun);
+      }
+
+      // UI aktualisieren
+      const updatedStats = loadStats();
+      document.getElementById('final-score').textContent = finalScore;
+      document.getElementById('end-round').textContent = currentRound;
+      document.getElementById('hs-end').textContent = updatedStats.highscore;
+      document.getElementById('fastest-end').textContent = 
+        updatedStats.fastestRound === Infinity ? '–' : updatedStats.fastestRound;
+      document.getElementById('most-blocks-end').textContent = updatedStats.mostBlocks;
+
+      document.getElementById('end-title').textContent = won 
+        ? '🏆 Vollständiger Meister!' 
+        : '⏰ Zu langsam!';
+
+      showScreen('screen-end');
+    }
+
+    function initGame() {
+      score = 0;
+      currentRound = 1;
+      document.getElementById('score-value').textContent = score;
+      showScreen('screen-game');
+      startRound(currentRound);
+    }
+
+    // Event Listener
+    document.getElementById('start-btn').addEventListener('click', initGame);
+    document.getElementById('restart-btn').addEventListener('click', initGame);
+
+    // Init Startbildschirm
+    updateStartScreen();
+  </script>
+</body>
+</html>
