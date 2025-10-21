@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Zahlenreihen-Auflösung – Meistermodus</title>
   <style>
     body {
@@ -12,6 +12,7 @@
       margin: 0;
       padding: 20px;
       color: #333;
+      position: relative;
     }
     .screen {
       max-width: 420px;
@@ -31,14 +32,17 @@
     }
     #grid {
       display: inline-grid;
-      grid-template-columns: repeat(4, 70px);
-      grid-template-rows: repeat(4, 70px);
+      grid-template-columns: repeat(4, 18vw);
+      grid-template-rows: repeat(4, 18vw);
       gap: 6px;
       margin: 15px auto;
+      max-width: 320px;
     }
     .cell {
-      width: 70px;
-      height: 70px;
+      width: 18vw;
+      height: 18vw;
+      min-width: 60px;
+      min-height: 60px;
       background: #e0e0e0;
       display: flex;
       align-items: center;
@@ -65,6 +69,20 @@
     .block-14 { background: #e84393; color: white; }
     .block-15 { background: #2d3436; color: white; }
 
+    /* Zeitstrafe-Overlay */
+    #penalty-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 0, 0, 0.2);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+
     button {
       padding: 12px 24px;
       font-size: 18px;
@@ -85,11 +103,14 @@
   </style>
 </head>
 <body>
+  <!-- Penalty-Overlay -->
+  <div id="penalty-overlay"></div>
+
   <!-- Start-Bildschirm -->
   <div id="screen-start" class="screen">
     <h1>🔢 Zahlenreihen-Auflösung</h1>
-    <p>Klicke die Blöcke in der Reihenfolge <strong>1 → 2 → 3 → ...</strong></p>
-    <p>Mehr Blöcke, weniger Zeit – wirst du Meister?</p>
+    <p>Klicke in Reihenfolge <strong>1 → 2 → 3 → ...</strong></p>
+    <p>⚠️ Falscher Klick = <strong>−3 Sekunden!</strong></p>
     
     <div class="stat-row">Highscore: <strong id="hs-start">0</strong></div>
     <div class="stat-row">Schnellste Runde: <strong id="fastest-start">–</strong></div>
@@ -132,7 +153,7 @@
 
     // Speicherschlüssel
     const HS_KEY = 'ns_highscore';
-    const FASTEST_KEY = 'ns_fastest_round'; // in Sekunden (kleiner = besser)
+    const FASTEST_KEY = 'ns_fastest_round';
     const MOST_BLOCKS_KEY = 'ns_most_blocks';
 
     const blockClasses = {
@@ -227,8 +248,17 @@
       }
     }
 
+    function showPenaltyEffect() {
+      const overlay = document.getElementById('penalty-overlay');
+      overlay.style.opacity = '1';
+      setTimeout(() => {
+        overlay.style.opacity = '0';
+      }, 200);
+    }
+
     function handleClick(r, c, value) {
       if (value === nextExpected) {
+        // Richtig!
         grid[r][c] = 0;
         const basePoints = 25;
         const speedBonus = timeLeft;
@@ -238,10 +268,8 @@
 
         const blockCount = Math.min(currentRound + 3, 15);
         if (nextExpected > blockCount) {
-          // Runde abgeschlossen – Zeit messen
           const roundTime = Math.round((Date.now() - roundStartTime) / 1000);
           checkRoundStats(roundTime, blockCount);
-
           clearInterval(timerInterval);
           if (currentRound >= maxRound) {
             setTimeout(() => endGame(true), 300);
@@ -252,18 +280,22 @@
         } else {
           render();
         }
+      } else {
+        // ❌ Falsch! Zeitstrafe
+        timeLeft = Math.max(0, timeLeft - 3);
+        document.getElementById('time-left').textContent = timeLeft;
+        showPenaltyEffect();
+        if (timeLeft <= 0) {
+          endGame(false);
+        }
       }
     }
 
     function checkRoundStats(roundTimeSec, blockCount) {
       const stats = loadStats();
-
-      // Schnellste Runde (niedrigste Zeit gewinnt)
       if (roundTimeSec < stats.fastestRound) {
         saveStat(FASTEST_KEY, roundTimeSec);
       }
-
-      // Meiste Blöcke insgesamt in einer Runde
       if (blockCount > stats.mostBlocks) {
         saveStat(MOST_BLOCKS_KEY, blockCount);
       }
@@ -271,22 +303,13 @@
 
     function endGame(won) {
       clearInterval(timerInterval);
-
       const stats = loadStats();
       const finalScore = score;
       const blocksThisRun = Math.min(currentRound + 3, 15);
 
-      // Highscore aktualisieren
-      if (finalScore > stats.highscore) {
-        saveStat(HS_KEY, finalScore);
-      }
+      if (finalScore > stats.highscore) saveStat(HS_KEY, finalScore);
+      if (blocksThisRun > stats.mostBlocks) saveStat(MOST_BLOCKS_KEY, blocksThisRun);
 
-      // Meiste Blöcke (falls nicht schon in checkRoundStats erfasst)
-      if (blocksThisRun > stats.mostBlocks) {
-        saveStat(MOST_BLOCKS_KEY, blocksThisRun);
-      }
-
-      // UI aktualisieren
       const updatedStats = loadStats();
       document.getElementById('final-score').textContent = finalScore;
       document.getElementById('end-round').textContent = currentRound;
@@ -310,11 +333,8 @@
       startRound(currentRound);
     }
 
-    // Event Listener
     document.getElementById('start-btn').addEventListener('click', initGame);
     document.getElementById('restart-btn').addEventListener('click', initGame);
-
-    // Init Startbildschirm
     updateStartScreen();
   </script>
 </body>
