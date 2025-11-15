@@ -2,340 +2,482 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Zahlenreihen-Auflösung – Meistermodus</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Schwarz-Weiß Bearbeitung</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      text-align: center;
-      background: #f0f2f5;
+      font-family: Arial, sans-serif;
+      padding: 0;
       margin: 0;
+      background: #f5f5f5;
+    }
+    .main-layout {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .controls-panel {
+      width: 320px;
+      background: #fff;
+      padding: 15px;
+      overflow-y: auto;
+      box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+    .preview-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       padding: 20px;
-      color: #333;
-      position: relative;
+      overflow: hidden;
     }
-    .screen {
-      max-width: 420px;
-      margin: 0 auto;
+    .file-upload {
+      margin-bottom: 15px;
     }
-    .hidden {
-      display: none;
-    }
-    h1, h2 {
-      margin-bottom: 16px;
-      color: #2c3e50;
-    }
-    p { margin: 6px 0; }
-    #game-info, #score, #stats, #timer {
-      font-size: 20px;
-      margin: 8px 0;
-    }
-    #grid {
-      display: inline-grid;
-      grid-template-columns: repeat(4, 18vw);
-      grid-template-rows: repeat(4, 18vw);
-      gap: 6px;
-      margin: 15px auto;
-      max-width: 320px;
-    }
-    .cell {
-      width: 18vw;
-      height: 18vw;
-      min-width: 60px;
-      min-height: 60px;
-      background: #e0e0e0;
+    .control-group {
+      margin: 10px 0;
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 26px;
+    }
+    label {
+      width: 120px;
       font-weight: bold;
-      cursor: pointer;
-      user-select: none;
-      border-radius: 8px;
+      font-size: 14px;
     }
-    .block-1 { background: #ff6b6b; color: white; }
-    .block-2 { background: #4ecdc4; color: white; }
-    .block-3 { background: #45b7d1; color: white; }
-    .block-4 { background: #f9ca24; color: black; }
-    .block-5 { background: #a29bfe; color: white; }
-    .block-6 { background: #fd79a8; color: white; }
-    .block-7 { background: #00b894; color: white; }
-    .block-8 { background: #fdcb6e; color: black; }
-    .block-9 { background: #e17055; color: white; }
-    .block-10 { background: #6c5ce7; color: white; }
-    .block-11 { background: #00cec9; color: white; }
-    .block-12 { background: #ffeaa7; color: black; }
-    .block-13 { background: #d63031; color: white; }
-    .block-14 { background: #e84393; color: white; }
-    .block-15 { background: #2d3436; color: white; }
-
-    /* Zeitstrafe-Overlay */
-    #penalty-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 0, 0, 0.2);
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s;
-      z-index: 100;
+    input[type="range"] {
+      width: 140px;
+      margin: 0 8px;
     }
-
+    input[type="number"] {
+      width: 60px;
+      padding: 3px;
+      text-align: center;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 13px;
+    }
     button {
-      padding: 12px 24px;
-      font-size: 18px;
-      background: #3498db;
+      margin: 4px 4px 4px 0;
+      padding: 6px 10px;
+      font-size: 13px;
+      background: #2196F3;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 4px;
       cursor: pointer;
-      margin: 10px 5px;
     }
-    button:hover {
-      background: #2980b9;
+    button:hover { background: #0b7dda; }
+    button.look-btn {
+      background: #9c27b0;
+      font-size: 12px;
+      padding: 5px 8px;
     }
-    .stat-row {
-      font-size: 16px;
-      color: #555;
+    button.look-btn:hover { background: #7b1fa2; }
+    button.user-look {
+      background: #ff9800;
+      font-size: 12px;
+      padding: 5px 8px;
+      margin: 3px 3px 3px 0;
+    }
+    button.user-look:hover { background: #f57c00; }
+    #lookNameInput {
+      margin: 5px 0 8px 0;
+      padding: 5px;
+      width: 140px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+    #previewContainer {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      border: 1px solid #ccc;
+      background: #eee;
+    }
+    #previewImg {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+    #placeholder {
+      color: #888;
+      font-style: italic;
+    }
+    #downloadLink {
+      display: none;
+      margin-top: 15px;
+      padding: 8px 16px;
+      background: #4CAF50;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 14px;
+      text-align: center;
+    }
+    .section-title {
+      margin-top: 15px;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #333;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 4px;
+    }
+    .action-buttons {
+      margin: 12px 0;
+    }
+    .user-look-item {
+      display: inline-block;
+      margin: 3px 3px 3px 0;
     }
   </style>
 </head>
 <body>
-  <!-- Penalty-Overlay -->
-  <div id="penalty-overlay"></div>
+  <div class="main-layout">
+    <!-- LINKE SEITE: BEDIENUNG -->
+    <div class="controls-panel">
+      <div class="file-upload">
+        <input type="file" id="imageUpload" accept="image/*" style="width:100%;" />
+      </div>
 
-  <!-- Start-Bildschirm -->
-  <div id="screen-start" class="screen">
-    <h1>🔢 Zahlenreihen-Auflösung</h1>
-    <p>Klicke in Reihenfolge <strong>1 → 2 → 3 → ...</strong></p>
-    <p>⚠️ Falscher Klick = <strong>−3 Sekunden!</strong></p>
-    
-    <div class="stat-row">Highscore: <strong id="hs-start">0</strong></div>
-    <div class="stat-row">Schnellste Runde: <strong id="fastest-start">–</strong></div>
-    <div class="stat-row">Meiste Blöcke: <strong id="most-blocks-start">0</strong></div>
-    
-    <button id="start-btn">▶️ Spiel starten</button>
+      <div class="section-title">Farbfilter</div>
+      <div class="control-group">
+        <label>Rot:</label>
+        <input type="range" id="redAdjustSlider" min="-100" max="100" value="0" />
+        <input type="number" id="redAdjustInput" min="-100" max="100" value="0" />
+      </div>
+      <div class="control-group">
+        <label>Grün:</label>
+        <input type="range" id="greenAdjustSlider" min="-100" max="100" value="0" />
+        <input type="number" id="greenAdjustInput" min="-100" max="100" value="0" />
+      </div>
+      <div class="control-group">
+        <label>Blau:</label>
+        <input type="range" id="blueAdjustSlider" min="-100" max="100" value="0" />
+        <input type="number" id="blueAdjustInput" min="-100" max="100" value="0" />
+      </div>
+
+      <div class="section-title">Tonwert</div>
+      <div class="control-group">
+        <label>Helligkeit:</label>
+        <input type="range" id="brightnessSlider" min="-100" max="100" value="0" />
+        <input type="number" id="brightnessInput" min="-100" max="100" value="0" />
+      </div>
+      <div class="control-group">
+        <label>Kontrast:</label>
+        <input type="range" id="contrastSlider" min="-100" max="100" value="0" />
+        <input type="number" id="contrastInput" min="-100" max="100" value="0" />
+      </div>
+
+      <div class="section-title">Effekte</div>
+      <div class="control-group">
+        <label>Körnung:</label>
+        <input type="range" id="grainSlider" min="0" max="100" value="0" />
+        <input type="number" id="grainInput" min="0" max="100" value="0" />
+      </div>
+      <div class="control-group">
+        <label>Vignettierung:</label>
+        <input type="range" id="vignetteSlider" min="0" max="100" value="0" />
+        <input type="number" id="vignetteInput" min="0" max="100" value="0" />
+      </div>
+
+      <div class="action-buttons">
+        <button onclick="applyProcessing()">In Schwarz-Weiß umwandeln</button>
+        <button onclick="resetToDefaults()">Standardwerte</button>
+      </div>
+
+      <div class="section-title">Voreingestellte Looks</div>
+      <button class="look-btn" onclick="applyPreset('neutral')">Neutral</button>
+      <button class="look-btn" onclick="applyPreset('classic')">Classic B&W</button>
+      <button class="look-btn" onclick="applyPreset('dramatic')">Dramatic Sky</button>
+      <button class="look-btn" onclick="applyPreset('portrait')">Portrait Glow</button>
+
+      <div class="section-title">Eigene Looks</div>
+      <input type="text" id="lookNameInput" placeholder="Name eingeben" />
+      <button onclick="saveCustomLook()">Look speichern</button>
+      <div id="userLooksContainer"></div>
+    </div>
+
+    <!-- RECHTE SEITE: VORSCHAU -->
+    <div class="preview-area">
+      <div id="previewContainer">
+        <img id="previewImg" alt="Vorschau" />
+        <div id="placeholder">Kein Bild geladen</div>
+      </div>
+      <a id="downloadLink" href="#" download="schwarz-weiss-bild.jpg">✅ Bild als JPEG herunterladen</a>
+    </div>
   </div>
 
-  <!-- Spiel-Bildschirm -->
-  <div id="screen-game" class="screen hidden">
-    <div id="game-info">Runde: <span id="round">1</span></div>
-    <div id="score">Punkte: <span id="score-value">0</span></div>
-    <div id="timer">Verbleibende Zeit: <span id="time-left">20</span>s</div>
-    <div id="grid"></div>
-  </div>
-
-  <!-- Ende-Bildschirm -->
-  <div id="screen-end" class="screen hidden">
-    <h2 id="end-title">⏰ Spiel vorbei!</h2>
-    <p>Punkte: <strong><span id="final-score">0</span></strong></p>
-    <p>Erreichte Runde: <strong><span id="end-round">1</span></strong></p>
-    
-    <div class="stat-row">Highscore: <strong id="hs-end">0</strong></div>
-    <div class="stat-row">Schnellste Runde: <strong id="fastest-end">–</strong> Sek</div>
-    <div class="stat-row">Meiste Blöcke: <strong id="most-blocks-end">0</strong></div>
-    
-    <button id="restart-btn">🔄 Nochmal spielen</button>
-  </div>
+  <!-- Versteckte Arbeits-Canvas -->
+  <canvas id="canvasOriginal" style="display:none;"></canvas>
+  <canvas id="canvasProcessed" style="display:none;"></canvas>
 
   <script>
-    const SIZE = 4;
-    let grid = [];
-    let nextExpected = 1;
-    let score = 0;
-    let currentRound = 1;
-    let maxRound = 12;
-    let timeLeft = 0;
-    let timerInterval = null;
-    let roundStartTime = 0;
+    let originalImage = null;
+    let isProcessed = false;
+    let originalImageUrl = '';
 
-    // Speicherschlüssel
-    const HS_KEY = 'ns_highscore';
-    const FASTEST_KEY = 'ns_fastest_round';
-    const MOST_BLOCKS_KEY = 'ns_most_blocks';
+    // === Synchronisation Slider ↔ Zahleneingabe ===
+    function bindSliderAndInput(sliderId, inputId, min, max) {
+      const slider = document.getElementById(sliderId);
+      const input = document.getElementById(inputId);
+      slider.addEventListener('input', () => input.value = slider.value);
+      input.addEventListener('input', () => {
+        let val = parseInt(input.value) || 0;
+        if (val < min) val = min;
+        if (val > max) val = max;
+        input.value = val;
+        slider.value = val;
+      });
+    }
 
-    const blockClasses = {
-      1: 'block-1', 2: 'block-2', 3: 'block-3', 4: 'block-4',
-      5: 'block-5', 6: 'block-6', 7: 'block-7', 8: 'block-8',
-      9: 'block-9', 10: 'block-10', 11: 'block-11', 12: 'block-12',
-      13: 'block-13', 14: 'block-14', 15: 'block-15'
+    bindSliderAndInput('redAdjustSlider', 'redAdjustInput', -100, 100);
+    bindSliderAndInput('greenAdjustSlider', 'greenAdjustInput', -100, 100);
+    bindSliderAndInput('blueAdjustSlider', 'blueAdjustInput', -100, 100);
+    bindSliderAndInput('brightnessSlider', 'brightnessInput', -100, 100);
+    bindSliderAndInput('contrastSlider', 'contrastInput', -100, 100);
+    bindSliderAndInput('grainSlider', 'grainInput', 0, 100);
+    bindSliderAndInput('vignetteSlider', 'vignetteInput', 0, 100);
+
+    // === Standardwerte ===
+    function resetToDefaults() {
+      setValues({ red: 0, green: 0, blue: 0, brightness: 0, contrast: 0, grain: 0, vignette: 0 });
+    }
+
+    // === Voreingestellte Looks ===
+    const builtInPresets = {
+      neutral:  { red: 0, green: 0, blue: 0, brightness: 0, contrast: 0, grain: 0, vignette: 0 },
+      classic:  { red: 20, green: 10, blue: -30, brightness: 0, contrast: 10, grain: 15, vignette: 0 },
+      dramatic: { red: 10, green: 0, blue: -70, brightness: -5, contrast: 20, grain: 25, vignette: 0 },
+      portrait: { red: 30, green: 20, blue: -10, brightness: 5, contrast: 5, grain: 10, vignette: 0 }
     };
 
-    // Statistik laden
-    function loadStats() {
+    function applyPreset(name) {
+      if (builtInPresets.hasOwnProperty(name)) {
+        setValues(builtInPresets[name]);
+        if (originalImage) applyProcessing();
+      }
+    }
+
+    // 🔥 NEU: Sicheres Auslesen aktueller Werte
+    function getCurrentValues() {
+      const safeParse = (id, fallback = 0) => {
+        const el = document.getElementById(id);
+        return el ? parseInt(el.value) || fallback : fallback;
+      };
       return {
-        highscore: parseInt(localStorage.getItem(HS_KEY)) || 0,
-        fastestRound: parseFloat(localStorage.getItem(FASTEST_KEY)) || Infinity,
-        mostBlocks: parseInt(localStorage.getItem(MOST_BLOCKS_KEY)) || 0
+        red: safeParse('redAdjustInput'),
+        green: safeParse('greenAdjustInput'),
+        blue: safeParse('blueAdjustInput'),
+        brightness: safeParse('brightnessInput'),
+        contrast: safeParse('contrastInput'),
+        grain: safeParse('grainInput'),
+        vignette: safeParse('vignetteInput')
       };
     }
 
-    function saveStat(key, value) {
-      localStorage.setItem(key, String(value));
-    }
-
-    function updateStartScreen() {
-      const stats = loadStats();
-      document.getElementById('hs-start').textContent = stats.highscore;
-      document.getElementById('fastest-start').textContent = 
-        stats.fastestRound === Infinity ? '–' : stats.fastestRound;
-      document.getElementById('most-blocks-start').textContent = stats.mostBlocks;
-    }
-
-    function showScreen(id) {
-      document.getElementById('screen-start').classList.add('hidden');
-      document.getElementById('screen-game').classList.add('hidden');
-      document.getElementById('screen-end').classList.add('hidden');
-      document.getElementById(id).classList.remove('hidden');
-    }
-
-    function placeBlocks(count) {
-      grid = Array(SIZE).fill().map(() => Array(SIZE).fill(0));
-      const used = new Set();
-      for (let id = 1; id <= count && id <= 15; id++) {
-        let r, c;
-        do {
-          r = Math.floor(Math.random() * SIZE);
-          c = Math.floor(Math.random() * SIZE);
-        } while (used.has(`${r},${c}`));
-        used.add(`${r},${c}`);
-        grid[r][c] = id;
-      }
-    }
-
-    function getTimeLimit(round) {
-      return Math.max(5, 20 - (round - 1) * 2);
-    }
-
-    function startRound(round) {
-      const blockCount = Math.min(round + 3, 15);
-      placeBlocks(blockCount);
-      nextExpected = 1;
-      timeLeft = getTimeLimit(round);
-      document.getElementById('round').textContent = round;
-      document.getElementById('time-left').textContent = timeLeft;
-      roundStartTime = Date.now();
-
-      clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        document.getElementById('time-left').textContent = timeLeft;
-        if (timeLeft <= 0) {
-          endGame(false);
+    // 🔥 NEU: Sicheres Setzen der Werte
+    function setValues(values) {
+      const fields = ['red', 'green', 'blue', 'brightness', 'contrast', 'grain', 'vignette'];
+      fields.forEach(key => {
+        if (values.hasOwnProperty(key)) {
+          const val = values[key];
+          const input = document.getElementById(key + 'AdjustInput');
+          const slider = document.getElementById(key + 'AdjustSlider');
+          if (input) input.value = val;
+          if (slider) slider.value = val;
         }
-      }, 1000);
-
-      render();
+      });
     }
 
-    function render() {
-      const gridEl = document.getElementById('grid');
-      gridEl.innerHTML = '';
-      for (let r = 0; r < SIZE; r++) {
-        for (let c = 0; c < SIZE; c++) {
-          const cell = document.createElement('div');
-          cell.className = 'cell';
-          const val = grid[r][c];
-          if (val !== 0 && blockClasses[val]) {
-            cell.classList.add(blockClasses[val]);
-            cell.textContent = val;
-            cell.addEventListener('click', () => handleClick(r, c, val));
-          }
-          gridEl.appendChild(cell);
+    // === Bild laden ===
+    document.getElementById('imageUpload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          originalImage = img;
+          isProcessed = false;
+          originalImageUrl = img.src;
+          document.getElementById('previewImg').src = originalImageUrl;
+          document.getElementById('previewImg').style.display = 'block';
+          document.getElementById('placeholder').style.display = 'none';
+          document.getElementById('downloadLink').style.display = 'none';
+
+          const co = document.getElementById('canvasOriginal');
+          co.width = img.width;
+          co.height = img.height;
+          co.getContext('2d').drawImage(img, 0, 0);
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // === Bild verarbeiten ===
+    function applyProcessing() {
+      if (!originalImage) {
+        alert('Bitte zuerst ein Bild hochladen.');
+        return;
+      }
+
+      const cp = document.getElementById('canvasProcessed');
+      const ctx = cp.getContext('2d');
+
+      const rAdj = parseInt(document.getElementById('redAdjustInput').value);
+      const gAdj = parseInt(document.getElementById('greenAdjustInput').value);
+      const bAdj = parseInt(document.getElementById('blueAdjustInput').value);
+      const brightness = parseInt(document.getElementById('brightnessInput').value);
+      const contrast = parseInt(document.getElementById('contrastInput').value);
+      const grain = parseInt(document.getElementById('grainInput').value);
+      const vignette = parseInt(document.getElementById('vignetteInput').value);
+
+      cp.width = originalImage.width;
+      cp.height = originalImage.height;
+      ctx.drawImage(originalImage, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, cp.width, cp.height);
+      const data = imageData.data;
+      const contrastFactor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+      const grainAmount = grain / 100;
+      const vignetteAmount = vignette / 100;
+
+      const centerX = cp.width / 2;
+      const centerY = cp.height / 2;
+      const maxDist = Math.sqrt(centerX * centerX + centerY * centerY);
+
+      for (let i = 0; i < data.length; i += 4) {
+        const x = (i / 4) % cp.width;
+        const y = Math.floor((i / 4) / cp.width);
+
+        let r = data[i], g = data[i+1], b = data[i+2];
+        r = Math.min(255, Math.max(0, r + (r * rAdj) / 100));
+        g = Math.min(255, Math.max(0, g + (g * gAdj) / 100));
+        b = Math.min(255, Math.max(0, b + (b * bAdj) / 100));
+
+        let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+        let adjusted = contrastFactor * (gray - 128) + 128 + brightness;
+        adjusted = Math.min(255, Math.max(0, adjusted));
+
+        if (grain > 0) {
+          const noiseIntensity = (1 - Math.abs(adjusted - 128) / 128) * grainAmount * 64;
+          adjusted += (Math.random() * 2 - 1) * noiseIntensity;
+          adjusted = Math.min(255, Math.max(0, adjusted));
         }
-      }
-    }
 
-    function showPenaltyEffect() {
-      const overlay = document.getElementById('penalty-overlay');
-      overlay.style.opacity = '1';
-      setTimeout(() => {
-        overlay.style.opacity = '0';
-      }, 200);
-    }
-
-    function handleClick(r, c, value) {
-      if (value === nextExpected) {
-        // Richtig!
-        grid[r][c] = 0;
-        const basePoints = 25;
-        const speedBonus = timeLeft;
-        score += basePoints + speedBonus;
-        document.getElementById('score-value').textContent = score;
-        nextExpected++;
-
-        const blockCount = Math.min(currentRound + 3, 15);
-        if (nextExpected > blockCount) {
-          const roundTime = Math.round((Date.now() - roundStartTime) / 1000);
-          checkRoundStats(roundTime, blockCount);
-          clearInterval(timerInterval);
-          if (currentRound >= maxRound) {
-            setTimeout(() => endGame(true), 300);
-          } else {
-            currentRound++;
-            setTimeout(() => startRound(currentRound), 500);
-          }
-        } else {
-          render();
+        if (vignette > 0) {
+          const dx = x - centerX;
+          const dy = y - centerY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const vignetteFactor = 1 - (dist / maxDist) * vignetteAmount;
+          adjusted *= vignetteFactor;
+          adjusted = Math.max(0, adjusted);
         }
-      } else {
-        // ❌ Falsch! Zeitstrafe
-        timeLeft = Math.max(0, timeLeft - 3);
-        document.getElementById('time-left').textContent = timeLeft;
-        showPenaltyEffect();
-        if (timeLeft <= 0) {
-          endGame(false);
-        }
+
+        data[i] = data[i+1] = data[i+2] = adjusted;
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      isProcessed = true;
+
+      const resultUrl = cp.toDataURL('image/jpeg', 0.92);
+      document.getElementById('previewImg').src = resultUrl;
+      document.getElementById('downloadLink').href = resultUrl;
+      document.getElementById('downloadLink').style.display = 'inline-block';
+    }
+
+    // === Original/Ergebnis-Vergleich ===
+    const container = document.getElementById('previewContainer');
+    const previewImg = document.getElementById('previewImg');
+
+    container.addEventListener('mousedown', () => {
+      if (originalImage && isProcessed) {
+        previewImg.src = originalImageUrl;
+      }
+    });
+
+    const showResult = () => {
+      if (originalImage && isProcessed) {
+        previewImg.src = document.getElementById('canvasProcessed').toDataURL('image/jpeg', 0.92);
+      }
+    };
+
+    container.addEventListener('mouseup', showResult);
+    container.addEventListener('mouseleave', showResult);
+
+    // 🔥 NEU: 100% zuverlässige eigene Looks
+    function loadCustomLooks() {
+      const saved = localStorage.getItem('customLooks');
+      return saved ? JSON.parse(saved) : {};
+    }
+
+    function saveCustomLooks(looks) {
+      localStorage.setItem('customLooks', JSON.stringify(looks));
+    }
+
+    function saveCustomLook() {
+      const name = document.getElementById('lookNameInput')?.value?.trim();
+      if (!name) {
+        alert('Bitte gib einen Namen für den Look ein.');
+        return;
+      }
+
+      const values = getCurrentValues(); // liest direkt aus UI
+      const looks = loadCustomLooks();
+      looks[name] = values;
+      saveCustomLooks(looks);
+      renderUserLooks();
+      document.getElementById('lookNameInput').value = '';
+    }
+
+    function applyCustomLook(name) {
+      const looks = loadCustomLooks();
+      if (looks[name]) {
+        setValues(looks[name]);
+        if (originalImage) applyProcessing();
       }
     }
 
-    function checkRoundStats(roundTimeSec, blockCount) {
-      const stats = loadStats();
-      if (roundTimeSec < stats.fastestRound) {
-        saveStat(FASTEST_KEY, roundTimeSec);
+    function deleteCustomLook(name) {
+      if (!confirm(`Möchtest du den Look "${name}" wirklich löschen?`)) return;
+      const looks = loadCustomLooks();
+      delete looks[name];
+      saveCustomLooks(looks);
+      renderUserLooks();
+    }
+
+    function renderUserLooks() {
+      const container = document.getElementById('userLooksContainer');
+      if (!container) return;
+
+      const looks = loadCustomLooks();
+      container.innerHTML = '';
+
+      for (const name in looks) {
+        const safeNameForJs = name.replace(/'/g, "\\'").replace(/"/g, "\\\"");
+        const safeNameForHtml = name.replace(/</g, "<").replace(/>/g, ">");
+        const div = document.createElement('div');
+        div.className = 'user-look-item';
+        div.innerHTML = `
+          <button class="user-look" onclick="applyCustomLook('${safeNameForJs}')">${safeNameForHtml}</button>
+          <button style="background:#f44336;font-size:11px;padding:3px 5px;" 
+                  onclick="deleteCustomLook('${safeNameForJs}')">x</button>
+        `;
+        container.appendChild(div);
       }
-      if (blockCount > stats.mostBlocks) {
-        saveStat(MOST_BLOCKS_KEY, blockCount);
-      }
     }
 
-    function endGame(won) {
-      clearInterval(timerInterval);
-      const stats = loadStats();
-      const finalScore = score;
-      const blocksThisRun = Math.min(currentRound + 3, 15);
-
-      if (finalScore > stats.highscore) saveStat(HS_KEY, finalScore);
-      if (blocksThisRun > stats.mostBlocks) saveStat(MOST_BLOCKS_KEY, blocksThisRun);
-
-      const updatedStats = loadStats();
-      document.getElementById('final-score').textContent = finalScore;
-      document.getElementById('end-round').textContent = currentRound;
-      document.getElementById('hs-end').textContent = updatedStats.highscore;
-      document.getElementById('fastest-end').textContent = 
-        updatedStats.fastestRound === Infinity ? '–' : updatedStats.fastestRound;
-      document.getElementById('most-blocks-end').textContent = updatedStats.mostBlocks;
-
-      document.getElementById('end-title').textContent = won 
-        ? '🏆 Vollständiger Meister!' 
-        : '⏰ Zu langsam!';
-
-      showScreen('screen-end');
-    }
-
-    function initGame() {
-      score = 0;
-      currentRound = 1;
-      document.getElementById('score-value').textContent = score;
-      showScreen('screen-game');
-      startRound(currentRound);
-    }
-
-    document.getElementById('start-btn').addEventListener('click', initGame);
-    document.getElementById('restart-btn').addEventListener('click', initGame);
-    updateStartScreen();
+    // === Initialisierung ===
+    window.addEventListener('DOMContentLoaded', () => {
+      renderUserLooks();
+    });
   </script>
 </body>
 </html>
