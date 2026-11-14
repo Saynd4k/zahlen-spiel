@@ -1,483 +1,1147 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Schwarz-Weiß Bearbeitung</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 0;
-      margin: 0;
-      background: #f5f5f5;
-    }
-    .main-layout {
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-    .controls-panel {
-      width: 320px;
-      background: #fff;
-      padding: 15px;
-      overflow-y: auto;
-      box-shadow: 2px 0 6px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-    }
-    .preview-area {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      overflow: hidden;
-    }
-    .file-upload {
-      margin-bottom: 15px;
-    }
-    .control-group {
-      margin: 10px 0;
-      display: flex;
-      align-items: center;
-    }
-    label {
-      width: 120px;
-      font-weight: bold;
-      font-size: 14px;
-    }
-    input[type="range"] {
-      width: 140px;
-      margin: 0 8px;
-    }
-    input[type="number"] {
-      width: 60px;
-      padding: 3px;
-      text-align: center;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-      font-size: 13px;
-    }
-    button {
-      margin: 4px 4px 4px 0;
-      padding: 6px 10px;
-      font-size: 13px;
-      background: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover { background: #0b7dda; }
-    button.look-btn {
-      background: #9c27b0;
-      font-size: 12px;
-      padding: 5px 8px;
-    }
-    button.look-btn:hover { background: #7b1fa2; }
-    button.user-look {
-      background: #ff9800;
-      font-size: 12px;
-      padding: 5px 8px;
-      margin: 3px 3px 3px 0;
-    }
-    button.user-look:hover { background: #f57c00; }
-    #lookNameInput {
-      margin: 5px 0 8px 0;
-      padding: 5px;
-      width: 140px;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-      font-size: 13px;
-    }
-    #previewContainer {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-      border: 1px solid #ccc;
-      background: #eee;
-    }
-    #previewImg {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      display: none;
-    }
-    #placeholder {
-      color: #888;
-      font-style: italic;
-    }
-    #downloadLink {
-      display: none;
-      margin-top: 15px;
-      padding: 8px 16px;
-      background: #4CAF50;
-      color: white;
-      text-decoration: none;
-      border-radius: 4px;
-      font-weight: bold;
-      font-size: 14px;
-      text-align: center;
-    }
-    .section-title {
-      margin-top: 15px;
-      margin-bottom: 8px;
-      font-weight: bold;
-      color: #333;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 4px;
-    }
-    .action-buttons {
-      margin: 12px 0;
-    }
-    .user-look-item {
-      display: inline-block;
-      margin: 3px 3px 3px 0;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mr.HotDog</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            /* 👇 Responsive Größen-Variablen 👇 */
+            --card-width: clamp(50px, 7vw, 90px);
+            --card-height: clamp(75px, 10.5vw, 135px);
+            --card-gap: clamp(2px, 0.5vw, 5px);
+            --font-title: clamp(20px, 3.5vw, 36px);
+            --font-message: clamp(16px, 2.5vw, 24px);
+            --font-card: clamp(20px, 3.5vw, 36px);
+            --font-small: clamp(11px, 1.2vw, 14px);
+            --font-medium: clamp(13px, 1.5vw, 18px);
+            --font-large: clamp(16px, 2vw, 22px);
+            --spacing: clamp(8px, 1.5vw, 15px);
+            --border-radius: clamp(6px, 1vw, 12px);
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-image: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+            text-align: center;
+            padding: var(--spacing);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        h1 { 
+            margin: 5px 0; 
+            color: #f1c40f; 
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 0 0 20px rgba(241, 196, 15, 0.5); 
+            font-size: var(--font-title); 
+            flex-shrink: 0;
+        }
+        
+        #game-area { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+            min-height: 0;
+            gap: var(--spacing);
+        }
+        
+        #ai-area {
+            display: flex;
+            justify-content: space-around;
+            gap: var(--spacing);
+            flex-shrink: 1;
+            min-height: 0;
+        }
+        
+        .ai-box {
+            flex: 1;
+            background: rgba(0,0,0,0.4);
+            border-radius: var(--border-radius);
+            padding: clamp(4px, 0.8vw, 8px);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .ai-box h4 { 
+            margin: 2px 0; 
+            color: #ecf0f1; 
+            font-size: var(--font-medium); 
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            flex-shrink: 0;
+        }
+        .ai-box.active { 
+            background: rgba(241, 196, 15, 0.3); 
+            border: 2px solid #f1c40f;
+            box-shadow: 0 0 15px rgba(241, 196, 15, 0.5);
+        }
+        
+        .hand {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: nowrap;
+            min-height: var(--card-height);
+            position: relative;
+            flex: 1;
+            overflow: visible;
+        }
+        
+        .card {
+            width: var(--card-width);
+            height: var(--card-height);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-card);
+            font-weight: bold;
+            color: white;
+            border: clamp(2px, 0.3vw, 3px) solid white;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-shadow: 1px 1px 2px black;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .card:hover { transform: translateY(-10px); }
+        
+        .card.playable {
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.9), 2px 2px 8px rgba(0,0,0,0.6);
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(241, 196, 15, 0.6), 2px 2px 8px rgba(0,0,0,0.6); }
+            50% { box-shadow: 0 0 30px rgba(241, 196, 15, 1), 2px 2px 8px rgba(0,0,0,0.6); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .card.shake { animation: shake 0.3s; }
+        
+        .ai-box .hand .card { margin-left: calc(var(--card-width) * -0.5); }
+        .ai-box .hand .card:first-child { margin-left: 0; }
+        .ai-box .hand .card:hover { transform: none; }
+        
+        .card.back {
+            background-color: #111;
+            background-image: url('hotdog-santa.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            cursor: default;
+            border: clamp(2px, 0.3vw, 3px) solid #c0392b;
+        }
+        
+        .red { background-color: #e74c3c; }
+        .yellow { background-color: #f1c40f; color: black; text-shadow: none; }
+        .green { background-color: #2ecc71; }
+        .blue { background-color: #3498db; }
+        .wild { background: linear-gradient(135deg, #e74c3c 25%, #f1c40f 25%, #f1c40f 50%, #2ecc71 50%, #2ecc71 75%, #3498db 75%); }
+
+        .card[data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.95);
+            color: #f1c40f;
+            padding: clamp(4px, 0.8vw, 8px) clamp(6px, 1vw, 12px);
+            border-radius: var(--border-radius);
+            font-size: var(--font-small);
+            white-space: nowrap;
+            border: 1px solid #f1c40f;
+            z-index: 1000;
+            pointer-events: none;
+            text-shadow: none;
+        }
+
+        #middle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: clamp(15px, 3vw, 30px);
+            margin: 5px 0;
+            position: relative;
+            flex-shrink: 0;
+        }
+        #draw-pile { cursor: pointer; position: relative; }
+        #draw-pile::after {
+            content: "Nachziehen";
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: var(--font-small);
+            color: #f1c40f;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            white-space: nowrap;
+        }
+        #discard-pile { position: relative; }
+        #color-indicator {
+            width: var(--card-width);
+            height: var(--card-height);
+            border-radius: var(--border-radius);
+            border: clamp(2px, 0.3vw, 3px) dashed white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: var(--font-small);
+            font-weight: bold;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+        }
+        #stack-counter {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: clamp(28px, 4vw, 40px);
+            height: clamp(28px, 4vw, 40px);
+            display: flex; align-items: center; justify-content: center;
+            font-size: var(--font-medium);
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
+            display: none;
+        }
+
+        #message {
+            font-size: var(--font-message);
+            font-weight: bold;
+            color: #f1c40f;
+            min-height: 30px;
+            margin: 5px 0;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.9), 0 0 15px rgba(241, 196, 15, 0.4);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #player-area {
+            background: rgba(0,0,0,0.4);
+            border-radius: var(--border-radius);
+            padding: var(--spacing);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+        #player-area h3 { 
+            margin: 3px 0; 
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            font-size: var(--font-large);
+        }
+        
+        #player-hand .card { margin-left: calc(var(--card-width) * -0.33); }
+        #player-hand .card:first-child { margin-left: 0; }
+        #player-hand .card:hover { transform: translateY(-15px); z-index: 10; }
+
+        #hotdog-button {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            color: white;
+            border: 4px solid #f1c40f;
+            border-radius: 50%;
+            width: clamp(120px, 20vw, 160px);
+            height: clamp(120px, 20vw, 160px);
+            font-size: clamp(20px, 3vw, 28px);
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 200;
+            box-shadow: 0 0 30px rgba(230, 126, 34, 0.9);
+            animation: hotdogPulse 0.5s infinite;
+            display: none;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        @keyframes hotdogPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+        #hotdog-button:hover { background: linear-gradient(135deg, #d35400, #e67e22); }
+        
+        #hotdog-timer {
+            position: fixed;
+            top: calc(50% + clamp(75px, 12vw, 100px));
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: var(--font-message);
+            color: #f1c40f;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+            z-index: 200;
+            display: none;
+        }
+
+        #color-picker {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: clamp(15px, 3vw, 30px);
+            border-radius: var(--border-radius);
+            border: 2px solid #f1c40f;
+            z-index: 100;
+            box-shadow: 0 0 30px rgba(241, 196, 15, 0.3);
+        }
+        #color-picker h3 { 
+            margin-top: 0; 
+            color: #f1c40f;
+            font-size: var(--font-large);
+        }
+        #color-picker button {
+            width: var(--card-width);
+            height: var(--card-height);
+            border: none;
+            border-radius: var(--border-radius);
+            margin: clamp(5px, 1vw, 10px);
+            cursor: pointer;
+            font-size: var(--font-medium);
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+        #color-picker button:hover { transform: scale(1.1); }
+
+        #difficulty-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            padding: var(--spacing);
+            overflow-y: auto;
+        }
+        #difficulty-screen h2 {
+            color: #f1c40f;
+            font-size: clamp(22px, 4vw, 36px);
+            margin-bottom: clamp(15px, 3vw, 30px);
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.9);
+        }
+        .diff-btn {
+            width: clamp(200px, 40vw, 250px);
+            padding: clamp(12px, 2vw, 20px);
+            margin: clamp(5px, 1vw, 10px);
+            font-size: var(--font-large);
+            font-weight: bold;
+            border: 3px solid white;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .diff-btn:hover { transform: scale(1.05); }
+        .diff-easy { background: #2ecc71; color: white; }
+        .diff-medium { background: #f39c12; color: white; }
+        .diff-hard { background: #e74c3c; color: white; }
+        .diff-desc { 
+            font-size: var(--font-small); 
+            margin-top: 5px; 
+            font-weight: normal;
+        }
+
+        button#new-game {
+            padding: clamp(8px, 1.5vw, 12px) clamp(16px, 2.5vw, 24px);
+            font-size: var(--font-medium);
+            background: #e67e22;
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            margin-top: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+        button#new-game:hover { background: #d35400; transform: scale(1.05); }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 500;
+        }
+
+        .flying-card {
+            position: fixed;
+            width: var(--card-width);
+            height: var(--card-height);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-card);
+            font-weight: bold;
+            color: white;
+            border: clamp(2px, 0.3vw, 3px) solid white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            text-shadow: 1px 1px 2px black;
+            z-index: 400;
+            pointer-events: none;
+        }
+        .flying-card.red { background-color: #e74c3c; }
+        .flying-card.yellow { background-color: #f1c40f; color: black; text-shadow: none; }
+        .flying-card.green { background-color: #2ecc71; }
+        .flying-card.blue { background-color: #3498db; }
+        .flying-card.wild { background: linear-gradient(135deg, #e74c3c 25%, #f1c40f 25%, #f1c40f 50%, #2ecc71 50%, #2ecc71 75%, #3498db 75%); }
+        .flying-card.back {
+            background-color: #111;
+            background-image: url('hotdog-santa.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: clamp(2px, 0.3vw, 3px) solid #c0392b;
+        }
+        
+        /* 👇 Media Queries für extreme Größen 👇 */
+        
+        /* Sehr kleine Bildschirme (Handys im Hochformat) */
+        @media (max-width: 480px) {
+            :root {
+                --card-width: 45px;
+                --card-height: 68px;
+            }
+            .ai-box .hand .card { margin-left: -22px; }
+            #player-hand .card { margin-left: -15px; }
+            body { padding: 5px; }
+            h1 { font-size: 18px; margin: 3px 0; }
+            #message { font-size: 14px; min-height: 20px; }
+        }
+        
+        /* Tablets und mittlere Bildschirme */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            :root {
+                --card-width: 70px;
+                --card-height: 105px;
+            }
+        }
+        
+        /* Große Bildschirme / Desktop */
+        @media (min-width: 1440px) {
+            :root {
+                --card-width: 100px;
+                --card-height: 150px;
+            }
+        }
+        
+        /* Landscape-Modus auf Handys */
+        @media (max-height: 500px) and (orientation: landscape) {
+            :root {
+                --card-width: 50px;
+                --card-height: 75px;
+            }
+            h1 { font-size: 16px; margin: 2px 0; }
+            #message { font-size: 12px; min-height: 16px; }
+            #player-area h3 { font-size: 12px; }
+            .ai-box h4 { font-size: 11px; }
+        }
+        
+        /* Sehr große Bildschirme (4K) */
+        @media (min-width: 2560px) {
+            :root {
+                --card-width: 130px;
+                --card-height: 195px;
+                --font-title: 48px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="main-layout">
-    <!-- LINKE SEITE: BEDIENUNG -->
-    <div class="controls-panel">
-      <div class="file-upload">
-        <input type="file" id="imageUpload" accept="image/*" style="width:100%;" />
-      </div>
 
-      <div class="section-title">Farbfilter</div>
-      <div class="control-group">
-        <label>Rot:</label>
-        <input type="range" id="redAdjustSlider" min="-100" max="100" value="0" />
-        <input type="number" id="redAdjustInput" min="-100" max="100" value="0" />
-      </div>
-      <div class="control-group">
-        <label>Grün:</label>
-        <input type="range" id="greenAdjustSlider" min="-100" max="100" value="0" />
-        <input type="number" id="greenAdjustInput" min="-100" max="100" value="0" />
-      </div>
-      <div class="control-group">
-        <label>Blau:</label>
-        <input type="range" id="blueAdjustSlider" min="-100" max="100" value="0" />
-        <input type="number" id="blueAdjustInput" min="-100" max="100" value="0" />
-      </div>
-
-      <div class="section-title">Tonwert</div>
-      <div class="control-group">
-        <label>Helligkeit:</label>
-        <input type="range" id="brightnessSlider" min="-100" max="100" value="0" />
-        <input type="number" id="brightnessInput" min="-100" max="100" value="0" />
-      </div>
-      <div class="control-group">
-        <label>Kontrast:</label>
-        <input type="range" id="contrastSlider" min="-100" max="100" value="0" />
-        <input type="number" id="contrastInput" min="-100" max="100" value="0" />
-      </div>
-
-      <div class="section-title">Effekte</div>
-      <div class="control-group">
-        <label>Körnung:</label>
-        <input type="range" id="grainSlider" min="0" max="100" value="0" />
-        <input type="number" id="grainInput" min="0" max="100" value="0" />
-      </div>
-      <div class="control-group">
-        <label>Vignettierung:</label>
-        <input type="range" id="vignetteSlider" min="0" max="100" value="0" />
-        <input type="number" id="vignetteInput" min="0" max="100" value="0" />
-      </div>
-
-      <div class="action-buttons">
-        <button onclick="applyProcessing()">In Schwarz-Weiß umwandeln</button>
-        <button onclick="resetToDefaults()">Standardwerte</button>
-      </div>
-
-      <div class="section-title">Voreingestellte Looks</div>
-      <button class="look-btn" onclick="applyPreset('neutral')">Neutral</button>
-      <button class="look-btn" onclick="applyPreset('classic')">Classic B&W</button>
-      <button class="look-btn" onclick="applyPreset('dramatic')">Dramatic Sky</button>
-      <button class="look-btn" onclick="applyPreset('portrait')">Portrait Glow</button>
-
-      <div class="section-title">Eigene Looks</div>
-      <input type="text" id="lookNameInput" placeholder="Name eingeben" />
-      <button onclick="saveCustomLook()">Look speichern</button>
-      <div id="userLooksContainer"></div>
+    <h1>🎴 Mr.HotDog 🌭🎅</h1>
+    <div id="message">Wähle einen Schwierigkeitsgrad!</div>
+    
+    <div id="difficulty-screen">
+        <h2>🎮 Wähle den Schwierigkeitsgrad</h2>
+        <button class="diff-btn diff-easy" onclick="startGame('easy')">
+            😊 Leicht
+            <div class="diff-desc">KI spielt zufällig, vergisst oft HotDog</div>
+        </button>
+        <button class="diff-btn diff-medium" onclick="startGame('medium')">
+            🤔 Mittel
+            <div class="diff-desc">KI spielt strategisch, erinnert sich an HotDog</div>
+        </button>
+        <button class="diff-btn diff-hard" onclick="startGame('hard')">
+            😈 Schwer
+            <div class="diff-desc">KI spielt optimal, vergisst nie HotDog</div>
+        </button>
     </div>
 
-    <!-- RECHTE SEITE: VORSCHAU -->
-    <div class="preview-area">
-      <div id="previewContainer">
-        <img id="previewImg" alt="Vorschau" />
-        <div id="placeholder">Kein Bild geladen</div>
-      </div>
-      <a id="downloadLink" href="#" download="schwarz-weiss-bild.jpg">✅ Bild als JPEG herunterladen</a>
+    <div id="game-area">
+        <div id="ai-area">
+            <div class="ai-box" id="ai-box-1">
+                <h4>KI 1 (<span id="ai-count-1">0</span>)</h4>
+                <div id="ai-hand-1" class="hand"></div>
+            </div>
+            <div class="ai-box" id="ai-box-2">
+                <h4>KI 2 (<span id="ai-count-2">0</span>)</h4>
+                <div id="ai-hand-2" class="hand"></div>
+            </div>
+            <div class="ai-box" id="ai-box-3">
+                <h4>KI 3 (<span id="ai-count-3">0</span>)</h4>
+                <div id="ai-hand-3" class="hand"></div>
+            </div>
+        </div>
+
+        <div id="middle">
+            <div id="draw-pile" class="card back" onclick="playerDraw()">
+                <div id="stack-counter">+0</div>
+            </div>
+            <div id="discard-pile"></div>
+            <div id="color-indicator">Farbe</div>
+        </div>
+
+        <div id="player-area">
+            <h3>DU (<span id="player-count">0</span> Karten)</h3>
+            <div id="player-hand" class="hand"></div>
+            <button id="new-game" onclick="showDifficultyScreen()">Neues Spiel</button>
+        </div>
     </div>
-  </div>
 
-  <!-- Versteckte Arbeits-Canvas -->
-  <canvas id="canvasOriginal" style="display:none;"></canvas>
-  <canvas id="canvasProcessed" style="display:none;"></canvas>
+    <div id="color-picker">
+        <h3>Wähle eine Farbe:</h3>
+        <button class="red" onclick="pickColor('red')">Rot</button>
+        <button class="yellow" onclick="pickColor('yellow')">Gelb</button>
+        <button class="green" onclick="pickColor('green')">Grün</button>
+        <button class="blue" onclick="pickColor('blue')">Blau</button>
+    </div>
 
-  <script>
-    let originalImage = null;
-    let isProcessed = false;
-    let originalImageUrl = '';
+    <button id="hotdog-button" onclick="sayHotDog()">HotDog!</button>
+    <div id="hotdog-timer"></div>
 
-    // === Synchronisation Slider ↔ Zahleneingabe ===
-    function bindSliderAndInput(sliderId, inputId, min, max) {
-      const slider = document.getElementById(sliderId);
-      const input = document.getElementById(inputId);
-      slider.addEventListener('input', () => input.value = slider.value);
-      input.addEventListener('input', () => {
-        let val = parseInt(input.value) || 0;
-        if (val < min) val = min;
-        if (val > max) val = max;
-        input.value = val;
-        slider.value = val;
-      });
-    }
+    <canvas id="confetti-canvas"></canvas>
 
-    bindSliderAndInput('redAdjustSlider', 'redAdjustInput', -100, 100);
-    bindSliderAndInput('greenAdjustSlider', 'greenAdjustInput', -100, 100);
-    bindSliderAndInput('blueAdjustSlider', 'blueAdjustInput', -100, 100);
-    bindSliderAndInput('brightnessSlider', 'brightnessInput', -100, 100);
-    bindSliderAndInput('contrastSlider', 'contrastInput', -100, 100);
-    bindSliderAndInput('grainSlider', 'grainInput', 0, 100);
-    bindSliderAndInput('vignetteSlider', 'vignetteInput', 0, 100);
+    <script>
+        let deck = [], players = [], discardPile = [];
+        let topCard = null, currentColor = "";
+        let currentPlayer = 0;
+        let direction = 1;
+        let pendingWildIndex = -1;
+        let difficulty = 'medium';
+        
+        let hotdogTimer = null;
+        let hotdogTimeLeft = 0;
+        let hotdogSaid = {0: false, 1: false, 2: false, 3: false};
+        
+        let pendingStack = 0;
+        let pendingStackType = null;
+        let isAnimating = false;
 
-    // === Standardwerte ===
-    function resetToDefaults() {
-      setValues({ red: 0, green: 0, blue: 0, brightness: 0, contrast: 0, grain: 0, vignette: 0 });
-    }
-
-    // === Voreingestellte Looks ===
-    const builtInPresets = {
-      neutral:  { red: 0, green: 0, blue: 0, brightness: 0, contrast: 0, grain: 0, vignette: 0 },
-      classic:  { red: 20, green: 10, blue: -30, brightness: 0, contrast: 10, grain: 15, vignette: 0 },
-      dramatic: { red: 10, green: 0, blue: -70, brightness: -5, contrast: 20, grain: 25, vignette: 0 },
-      portrait: { red: 30, green: 20, blue: -10, brightness: 5, contrast: 5, grain: 10, vignette: 0 }
-    };
-
-    function applyPreset(name) {
-      if (builtInPresets.hasOwnProperty(name)) {
-        setValues(builtInPresets[name]);
-        if (originalImage) applyProcessing();
-      }
-    }
-
-    // 🔥 NEU: Sicheres Auslesen aktueller Werte
-    function getCurrentValues() {
-      const safeParse = (id, fallback = 0) => {
-        const el = document.getElementById(id);
-        return el ? parseInt(el.value) || fallback : fallback;
-      };
-      return {
-        red: safeParse('redAdjustInput'),
-        green: safeParse('greenAdjustInput'),
-        blue: safeParse('blueAdjustInput'),
-        brightness: safeParse('brightnessInput'),
-        contrast: safeParse('contrastInput'),
-        grain: safeParse('grainInput'),
-        vignette: safeParse('vignetteInput')
-      };
-    }
-
-    // 🔥 NEU: Sicheres Setzen der Werte
-    function setValues(values) {
-      const fields = ['red', 'green', 'blue', 'brightness', 'contrast', 'grain', 'vignette'];
-      fields.forEach(key => {
-        if (values.hasOwnProperty(key)) {
-          const val = values[key];
-          const input = document.getElementById(key + 'AdjustInput');
-          const slider = document.getElementById(key + 'AdjustSlider');
-          if (input) input.value = val;
-          if (slider) slider.value = val;
-        }
-      });
-    }
-
-    // === Bild laden ===
-    document.getElementById('imageUpload').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const img = new Image();
-        img.onload = function() {
-          originalImage = img;
-          isProcessed = false;
-          originalImageUrl = img.src;
-          document.getElementById('previewImg').src = originalImageUrl;
-          document.getElementById('previewImg').style.display = 'block';
-          document.getElementById('placeholder').style.display = 'none';
-          document.getElementById('downloadLink').style.display = 'none';
-
-          const co = document.getElementById('canvasOriginal');
-          co.width = img.width;
-          co.height = img.height;
-          co.getContext('2d').drawImage(img, 0, 0);
+        const COLORS = ['red', 'yellow', 'green', 'blue'];
+        const VALUES = ['0','1','2','3','4','5','6','7','8','9','skip','reverse','draw2'];
+        
+        const TOOLTIPS = {
+            'skip': '⊘ Nächster Spieler setzt aus',
+            'reverse': '⇄ Spielt die Richtung um',
+            'draw2': '+2 Nächster zieht 2 Karten',
+            'wild': 'W Farbe frei wählbar',
+            'wild4': '+4 Farbe wählbar + Nächster zieht 4'
         };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
 
-    // === Bild verarbeiten ===
-    function applyProcessing() {
-      if (!originalImage) {
-        alert('Bitte zuerst ein Bild hochladen.');
-        return;
-      }
-
-      const cp = document.getElementById('canvasProcessed');
-      const ctx = cp.getContext('2d');
-
-      const rAdj = parseInt(document.getElementById('redAdjustInput').value);
-      const gAdj = parseInt(document.getElementById('greenAdjustInput').value);
-      const bAdj = parseInt(document.getElementById('blueAdjustInput').value);
-      const brightness = parseInt(document.getElementById('brightnessInput').value);
-      const contrast = parseInt(document.getElementById('contrastInput').value);
-      const grain = parseInt(document.getElementById('grainInput').value);
-      const vignette = parseInt(document.getElementById('vignetteInput').value);
-
-      cp.width = originalImage.width;
-      cp.height = originalImage.height;
-      ctx.drawImage(originalImage, 0, 0);
-
-      const imageData = ctx.getImageData(0, 0, cp.width, cp.height);
-      const data = imageData.data;
-      const contrastFactor = (259 * (contrast + 255)) / (255 * (259 - contrast));
-      const grainAmount = grain / 100;
-      const vignetteAmount = vignette / 100;
-
-      const centerX = cp.width / 2;
-      const centerY = cp.height / 2;
-      const maxDist = Math.sqrt(centerX * centerX + centerY * centerY);
-
-      for (let i = 0; i < data.length; i += 4) {
-        const x = (i / 4) % cp.width;
-        const y = Math.floor((i / 4) / cp.width);
-
-        let r = data[i], g = data[i+1], b = data[i+2];
-        r = Math.min(255, Math.max(0, r + (r * rAdj) / 100));
-        g = Math.min(255, Math.max(0, g + (g * gAdj) / 100));
-        b = Math.min(255, Math.max(0, b + (b * bAdj) / 100));
-
-        let gray = 0.299 * r + 0.587 * g + 0.114 * b;
-        let adjusted = contrastFactor * (gray - 128) + 128 + brightness;
-        adjusted = Math.min(255, Math.max(0, adjusted));
-
-        if (grain > 0) {
-          const noiseIntensity = (1 - Math.abs(adjusted - 128) / 128) * grainAmount * 64;
-          adjusted += (Math.random() * 2 - 1) * noiseIntensity;
-          adjusted = Math.min(255, Math.max(0, adjusted));
+        function getTooltip(card) {
+            if (TOOLTIPS[card.value]) return TOOLTIPS[card.value];
+            return `${card.color.toUpperCase()} ${card.value}`;
         }
 
-        if (vignette > 0) {
-          const dx = x - centerX;
-          const dy = y - centerY;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const vignetteFactor = 1 - (dist / maxDist) * vignetteAmount;
-          adjusted *= vignetteFactor;
-          adjusted = Math.max(0, adjusted);
+        function createDeck() {
+            let d = [];
+            COLORS.forEach(color => {
+                d.push({ color, value: '0', type: 'number' });
+                for (let i = 1; i < VALUES.length; i++) {
+                    let type = ['skip', 'reverse', 'draw2'].includes(VALUES[i]) ? 'action' : 'number';
+                    d.push({ color, value: VALUES[i], type });
+                    d.push({ color, value: VALUES[i], type });
+                }
+            });
+            for (let i = 0; i < 4; i++) {
+                d.push({ color: 'wild', value: 'wild', type: 'wild' });
+                d.push({ color: 'wild', value: 'wild4', type: 'wild' });
+            }
+            return d;
         }
 
-        data[i] = data[i+1] = data[i+2] = adjusted;
-      }
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
 
-      ctx.putImageData(imageData, 0, 0);
-      isProcessed = true;
+        function showDifficultyScreen() {
+            document.getElementById('difficulty-screen').style.display = 'flex';
+            stopConfetti();
+        }
 
-      const resultUrl = cp.toDataURL('image/jpeg', 0.92);
-      document.getElementById('previewImg').src = resultUrl;
-      document.getElementById('downloadLink').href = resultUrl;
-      document.getElementById('downloadLink').style.display = 'inline-block';
-    }
+        function startGame(diff) {
+            difficulty = diff;
+            document.getElementById('difficulty-screen').style.display = 'none';
+            
+            deck = createDeck();
+            shuffle(deck);
+            players = [[], [], [], []];
+            discardPile = [];
+            direction = 1;
+            currentPlayer = 0;
+            pendingStack = 0;
+            pendingStackType = null;
+            hotdogSaid = {0: false, 1: false, 2: false, 3: false};
+            clearHotdogTimer();
+            stopConfetti();
+            isAnimating = false;
+            
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 7; j++) {
+                    players[i].push(deck.pop());
+                }
+            }
+            
+            topCard = deck.pop();
+            while (topCard.type === 'wild') {
+                deck.unshift(topCard);
+                shuffle(deck);
+                topCard = deck.pop();
+            }
+            currentColor = topCard.color;
+            discardPile.push(topCard);
+            
+            document.getElementById('message').innerText = "Du bist dran!";
+            render();
+        }
 
-    // === Original/Ergebnis-Vergleich ===
-    const container = document.getElementById('previewContainer');
-    const previewImg = document.getElementById('previewImg');
+        function render() {
+            for (let i = 1; i <= 3; i++) {
+                const handEl = document.getElementById(`ai-hand-${i}`);
+                const boxEl = document.getElementById(`ai-box-${i}`);
+                handEl.innerHTML = '';
+                players[i].forEach(() => {
+                    let cardDiv = document.createElement('div');
+                    cardDiv.className = 'card back';
+                    handEl.appendChild(cardDiv);
+                });
+                document.getElementById(`ai-count-${i}`).innerText = players[i].length;
+                boxEl.classList.toggle('active', currentPlayer === i);
+            }
 
-    container.addEventListener('mousedown', () => {
-      if (originalImage && isProcessed) {
-        previewImg.src = originalImageUrl;
-      }
-    });
+            const playerHandEl = document.getElementById('player-hand');
+            playerHandEl.innerHTML = '';
+            players[0].forEach((card, index) => {
+                let cardDiv = document.createElement('div');
+                cardDiv.className = `card ${card.color}`;
+                cardDiv.innerText = getCardText(card);
+                cardDiv.setAttribute('data-tooltip', getTooltip(card));
+                cardDiv.onclick = () => playerPlayCard(index);
+                
+                if (currentPlayer === 0 && canPlay(card)) {
+                    cardDiv.classList.add('playable');
+                }
+                
+                playerHandEl.appendChild(cardDiv);
+            });
+            document.getElementById('player-count').innerText = players[0].length;
 
-    const showResult = () => {
-      if (originalImage && isProcessed) {
-        previewImg.src = document.getElementById('canvasProcessed').toDataURL('image/jpeg', 0.92);
-      }
-    };
+            document.getElementById('discard-pile').innerHTML = 
+                `<div class="card ${topCard.color}" data-tooltip="${getTooltip(topCard)}">${getCardText(topCard)}</div>`;
+            
+            const colorIndEl = document.getElementById('color-indicator');
+            colorIndEl.style.backgroundColor = currentColor;
+            colorIndEl.style.color = currentColor === 'yellow' ? 'black' : 'white';
+            colorIndEl.innerText = currentColor.toUpperCase();
+            
+            const stackEl = document.getElementById('stack-counter');
+            if (pendingStack > 0) {
+                stackEl.innerText = `+${pendingStack}`;
+                stackEl.style.display = 'flex';
+            } else {
+                stackEl.style.display = 'none';
+            }
+        }
 
-    container.addEventListener('mouseup', showResult);
-    container.addEventListener('mouseleave', showResult);
+        function getCardText(card) {
+            if (card.value === 'skip') return '⊘';
+            if (card.value === 'reverse') return '⇄';
+            if (card.value === 'draw2') return '+2';
+            if (card.value === 'wild') return 'W';
+            if (card.value === 'wild4') return '+4';
+            return card.value;
+        }
 
-    // 🔥 NEU: 100% zuverlässige eigene Looks
-    function loadCustomLooks() {
-      const saved = localStorage.getItem('customLooks');
-      return saved ? JSON.parse(saved) : {};
-    }
+        function canPlay(card) {
+            if (pendingStack > 0) {
+                if (pendingStackType === 'draw2' && card.value === 'draw2') return true;
+                if (pendingStackType === 'wild4' && card.value === 'wild4') return true;
+                return false;
+            }
+            if (card.type === 'wild') return true;
+            if (card.color === currentColor) return true;
+            if (card.value === topCard.value) return true;
+            return false;
+        }
 
-    function saveCustomLooks(looks) {
-      localStorage.setItem('customLooks', JSON.stringify(looks));
-    }
+        function showMessage(msg) {
+            document.getElementById('message').innerText = msg;
+        }
 
-    function saveCustomLook() {
-      const name = document.getElementById('lookNameInput')?.value?.trim();
-      if (!name) {
-        alert('Bitte gib einen Namen für den Look ein.');
-        return;
-      }
+        function animateCardPlay(card, fromElement, callback) {
+            isAnimating = true;
+            
+            const flyingCard = document.createElement('div');
+            flyingCard.className = `flying-card ${card.color}`;
+            flyingCard.innerText = getCardText(card);
+            document.body.appendChild(flyingCard);
+            
+            const fromRect = fromElement.getBoundingClientRect();
+            const startX = fromRect.left + fromRect.width / 2 - flyingCard.offsetWidth / 2;
+            const startY = fromRect.top + fromRect.height / 2 - flyingCard.offsetHeight / 2;
+            
+            const discardEl = document.getElementById('discard-pile');
+            const toRect = discardEl.getBoundingClientRect();
+            const endX = toRect.left + toRect.width / 2 - flyingCard.offsetWidth / 2;
+            const endY = toRect.top + toRect.height / 2 - flyingCard.offsetHeight / 2;
+            
+            flyingCard.style.left = startX + 'px';
+            flyingCard.style.top = startY + 'px';
+            
+            const animation = flyingCard.animate([
+                { 
+                    left: startX + 'px', 
+                    top: startY + 'px',
+                    transform: 'rotate(0deg) scale(1)',
+                    opacity: 1
+                },
+                { 
+                    left: (startX + endX) / 2 + 'px', 
+                    top: Math.min(startY, endY) - 100 + 'px',
+                    transform: 'rotate(180deg) scale(1.2)',
+                    opacity: 1,
+                    offset: 0.5
+                },
+                { 
+                    left: endX + 'px', 
+                    top: endY + 'px',
+                    transform: 'rotate(360deg) scale(0.9)',
+                    opacity: 1,
+                    offset: 0.9
+                },
+                { 
+                    left: endX + 'px', 
+                    top: endY + 'px',
+                    transform: 'rotate(360deg) scale(1)',
+                    opacity: 1
+                }
+            ], {
+                duration: 500,
+                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+            });
+            
+            animation.onfinish = () => {
+                flyingCard.remove();
+                isAnimating = false;
+                if (callback) callback();
+            };
+        }
 
-      const values = getCurrentValues(); // liest direkt aus UI
-      const looks = loadCustomLooks();
-      looks[name] = values;
-      saveCustomLooks(looks);
-      renderUserLooks();
-      document.getElementById('lookNameInput').value = '';
-    }
+        function checkHotDog(playerIndex) {
+            if (players[playerIndex].length === 1) {
+                if (playerIndex === 0) {
+                    startHotdogTimer();
+                } else {
+                    let forgetChance = difficulty === 'easy' ? 0.4 : difficulty === 'medium' ? 0.15 : 0;
+                    if (Math.random() > forgetChance) {
+                        hotdogSaid[playerIndex] = true;
+                        showMessage(`KI ${playerIndex} ruft HotDog! 🌭`);
+                    } else {
+                        hotdogSaid[playerIndex] = false;
+                        showMessage(`KI ${playerIndex} vergisst HotDog! 🐕`);
+                    }
+                }
+            } else {
+                hotdogSaid[playerIndex] = true;
+            }
+        }
 
-    function applyCustomLook(name) {
-      const looks = loadCustomLooks();
-      if (looks[name]) {
-        setValues(looks[name]);
-        if (originalImage) applyProcessing();
-      }
-    }
+        function startHotdogTimer() {
+            clearHotdogTimer();
+            hotdogSaid[0] = false;
+            hotdogTimeLeft = 3;
+            document.getElementById('hotdog-button').style.display = 'block';
+            document.getElementById('hotdog-timer').style.display = 'block';
+            document.getElementById('hotdog-timer').innerText = `${hotdogTimeLeft}s`;
+            
+            hotdogTimer = setInterval(() => {
+                hotdogTimeLeft--;
+                document.getElementById('hotdog-timer').innerText = `${hotdogTimeLeft}s`;
+                if (hotdogTimeLeft <= 0) {
+                    clearHotdogTimer();
+                    for (let i = 0; i < 2; i++) {
+                        if (deck.length === 0) reshuffleDeck();
+                        if (deck.length > 0) players[0].push(deck.pop());
+                    }
+                    showMessage("⏰ Zeit abgelaufen! +2 Strafkarten!");
+                    render();
+                }
+            }, 1000);
+        }
 
-    function deleteCustomLook(name) {
-      if (!confirm(`Möchtest du den Look "${name}" wirklich löschen?`)) return;
-      const looks = loadCustomLooks();
-      delete looks[name];
-      saveCustomLooks(looks);
-      renderUserLooks();
-    }
+        function sayHotDog() {
+            clearHotdogTimer();
+            hotdogSaid[0] = true;
+            document.getElementById('hotdog-button').style.display = 'none';
+            document.getElementById('hotdog-timer').style.display = 'none';
+            showMessage("HotDog! 🌭🎉");
+        }
 
-    function renderUserLooks() {
-      const container = document.getElementById('userLooksContainer');
-      if (!container) return;
+        function clearHotdogTimer() {
+            if (hotdogTimer) {
+                clearInterval(hotdogTimer);
+                hotdogTimer = null;
+            }
+            document.getElementById('hotdog-button').style.display = 'none';
+            document.getElementById('hotdog-timer').style.display = 'none';
+        }
 
-      const looks = loadCustomLooks();
-      container.innerHTML = '';
+        function checkHotDogPenalty(playerIndex) {
+            if (players[playerIndex].length === 1 && !hotdogSaid[playerIndex]) {
+                for (let i = 0; i < 2; i++) {
+                    if (deck.length === 0) reshuffleDeck();
+                    if (deck.length > 0) players[playerIndex].push(deck.pop());
+                }
+                if (playerIndex === 0) {
+                    showMessage("😱 Du hast HotDog vergessen! +2 Strafkarten!");
+                } else {
+                    showMessage(`KI ${playerIndex} hat HotDog vergessen! +2 Strafkarten!`);
+                }
+                render();
+                return true;
+            }
+            return false;
+        }
 
-      for (const name in looks) {
-        const safeNameForJs = name.replace(/'/g, "\\'").replace(/"/g, "\\\"");
-        const safeNameForHtml = name.replace(/</g, "<").replace(/>/g, ">");
-        const div = document.createElement('div');
-        div.className = 'user-look-item';
-        div.innerHTML = `
-          <button class="user-look" onclick="applyCustomLook('${safeNameForJs}')">${safeNameForHtml}</button>
-          <button style="background:#f44336;font-size:11px;padding:3px 5px;" 
-                  onclick="deleteCustomLook('${safeNameForJs}')">x</button>
-        `;
-        container.appendChild(div);
-      }
-    }
+        function playerPlayCard(index) {
+            if (currentPlayer !== 0 || isAnimating) return;
+            let card = players[0][index];
+            
+            if (!canPlay(card)) {
+                const cardEl = document.querySelectorAll('#player-hand .card')[index];
+                cardEl.classList.add('shake');
+                setTimeout(() => cardEl.classList.remove('shake'), 300);
+                showMessage("Diese Karte passt nicht!");
+                return;
+            }
 
-    // === Initialisierung ===
-    window.addEventListener('DOMContentLoaded', () => {
-      renderUserLooks();
-    });
-  </script>
+            if (card.type === 'wild') {
+                pendingWildIndex = index;
+                document.getElementById('color-picker').style.display = 'block';
+                return;
+            }
+
+            const cardEl = document.querySelectorAll('#player-hand .card')[index];
+            animateCardPlay(card, cardEl, () => {
+                executePlay(0, index);
+            });
+        }
+
+        function pickColor(color) {
+            document.getElementById('color-picker').style.display = 'none';
+            const card = players[0][pendingWildIndex];
+            const cardEl = document.querySelectorAll('#player-hand .card')[pendingWildIndex];
+            animateCardPlay(card, cardEl, () => {
+                executePlay(0, pendingWildIndex, color);
+            });
+        }
+
+        function playerDraw() {
+            if (currentPlayer !== 0 || isAnimating) return;
+            
+            if (pendingStack > 0) {
+                for (let i = 0; i < pendingStack; i++) {
+                    if (deck.length === 0) reshuffleDeck();
+                    if (deck.length > 0) players[0].push(deck.pop());
+                }
+                showMessage(`Du musst ${pendingStack} Karten ziehen!`);
+                pendingStack = 0;
+                pendingStackType = null;
+                render();
+                currentPlayer = (currentPlayer + direction + 4) % 4;
+                advanceToNext();
+                return;
+            }
+            
+            if (deck.length === 0) reshuffleDeck();
+            if (deck.length > 0) {
+                players[0].push(deck.pop());
+                showMessage("Du hast eine Karte gezogen.");
+                render();
+                currentPlayer = (currentPlayer + direction + 4) % 4;
+                advanceToNext();
+            }
+        }
+
+        function executePlay(playerIndex, cardIndex, chosenColor = null) {
+            let card = players[playerIndex].splice(cardIndex, 1)[0];
+            if (chosenColor) card.color = chosenColor;
+            
+            discardPile.push(card);
+            topCard = card;
+            currentColor = card.color;
+
+            if (players[playerIndex].length === 0) {
+                showMessage(playerIndex === 0 ? "🎉 DU HAST GEWONNEN! 🎉" : `💀 KI ${playerIndex} hat gewonnen! 💀`);
+                render();
+                if (playerIndex === 0) startConfetti();
+                return;
+            }
+
+            checkHotDog(playerIndex);
+
+            if (card.value === 'draw2' || card.value === 'wild4') {
+                if (pendingStack > 0 && pendingStackType === card.value) {
+                    pendingStack += (card.value === 'draw2' ? 2 : 4);
+                } else {
+                    pendingStack = card.value === 'draw2' ? 2 : 4;
+                    pendingStackType = card.value;
+                }
+            }
+
+            if (card.value === 'reverse') direction *= -1;
+
+            let steps = (card.value === 'skip' || card.value === 'draw2' || card.value === 'wild4') ? 2 : 1;
+            currentPlayer = (playerIndex + direction * steps + 4) % 4;
+
+            render();
+            advanceToNext();
+        }
+
+        function advanceToNext() {
+            if (currentPlayer === 0) {
+                showMessage("Du bist dran!");
+            } else {
+                showMessage(`KI ${currentPlayer} ist am Zug...`);
+                setTimeout(aiTurn, 1200);
+            }
+        }
+
+        function aiTurn() {
+            if (isAnimating) {
+                setTimeout(aiTurn, 100);
+                return;
+            }
+            
+            let aiIndex = currentPlayer;
+            let hand = players[aiIndex];
+            let playable = hand.filter(c => canPlay(c));
+            
+            let cardToPlay = null;
+            let index = -1;
+            let chosenColor = null;
+            
+            if (playable.length > 0) {
+                if (difficulty === 'easy') {
+                    cardToPlay = playable[Math.floor(Math.random() * playable.length)];
+                    index = hand.indexOf(cardToPlay);
+                } else if (difficulty === 'medium') {
+                    cardToPlay = playable.find(c => c.type !== 'wild') || playable[0];
+                    index = hand.indexOf(cardToPlay);
+                } else {
+                    cardToPlay = chooseBestCard(hand, playable, aiIndex);
+                    index = hand.indexOf(cardToPlay);
+                }
+                
+                if (cardToPlay.type === 'wild') {
+                    chosenColor = chooseBestColor(hand, aiIndex);
+                }
+            }
+            
+            if (cardToPlay) {
+                const aiBox = document.getElementById(`ai-box-${aiIndex}`);
+                animateCardPlay(cardToPlay, aiBox, () => {
+                    executePlay(aiIndex, index, chosenColor);
+                    
+                    setTimeout(() => {
+                        if (players[aiIndex].length === 1 && !hotdogSaid[aiIndex]) {
+                            checkHotDogPenalty(aiIndex);
+                        }
+                    }, 500);
+                });
+            } else {
+                if (pendingStack > 0) {
+                    for (let i = 0; i < pendingStack; i++) {
+                        if (deck.length === 0) reshuffleDeck();
+                        if (deck.length > 0) hand.push(deck.pop());
+                    }
+                    showMessage(`KI ${aiIndex} muss ${pendingStack} Karten ziehen!`);
+                    pendingStack = 0;
+                    pendingStackType = null;
+                    render();
+                    currentPlayer = (aiIndex + direction + 4) % 4;
+                    advanceToNext();
+                } else {
+                    if (deck.length === 0) reshuffleDeck();
+                    if (deck.length > 0) {
+                        hand.push(deck.pop());
+                        showMessage(`KI ${aiIndex} zieht eine Karte.`);
+                        render();
+                        
+                        let newPlayable = hand.filter(c => canPlay(c));
+                        if (newPlayable.length > 0) {
+                            setTimeout(() => {
+                                let newCard = difficulty === 'easy' 
+                                    ? newPlayable[Math.floor(Math.random() * newPlayable.length)]
+                                    : newPlayable[0];
+                                let newIndex = hand.indexOf(newCard);
+                                let newColor = null;
+                                if (newCard.type === 'wild') newColor = chooseBestColor(hand, aiIndex);
+                                
+                                const aiBox = document.getElementById(`ai-box-${aiIndex}`);
+                                animateCardPlay(newCard, aiBox, () => {
+                                    executePlay(aiIndex, newIndex, newColor);
+                                });
+                            }, 1000);
+                        } else {
+                            setTimeout(() => {
+                                currentPlayer = (aiIndex + direction + 4) % 4;
+                                advanceToNext();
+                            }, 1000);
+                        }
+                    } else {
+                        currentPlayer = (aiIndex + direction + 4) % 4;
+                        advanceToNext();
+                    }
+                }
+            }
+        }
+
+        function chooseBestCard(hand, playable, aiIndex) {
+            let nextPlayer = (aiIndex + direction + 4) % 4;
+            let opponentHasFewCards = players[nextPlayer].length <= 3;
+            
+            if (opponentHasFewCards) {
+                let actionCard = playable.find(c => c.value === 'skip' || c.value === 'reverse');
+                if (actionCard) return actionCard;
+            }
+            
+            if (opponentHasFewCards) {
+                let drawCard = playable.find(c => c.value === 'draw2' || c.value === 'wild4');
+                if (drawCard) return drawCard;
+            }
+            
+            let numberCard = playable.find(c => c.type === 'number');
+            if (numberCard) return numberCard;
+            
+            let actionCard = playable.find(c => c.type === 'action');
+            if (actionCard) return actionCard;
+            
+            return playable[0];
+        }
+
+        function chooseBestColor(hand, aiIndex) {
+            if (difficulty === 'easy') {
+                return COLORS[Math.floor(Math.random() * 4)];
+            }
+            
+            let colorCounts = {red:0, yellow:0, green:0, blue:0};
+            hand.forEach(c => { if(c.color !== 'wild') colorCounts[c.color]++; });
+            return Object.keys(colorCounts).reduce((a, b) => colorCounts[a] > colorCounts[b] ? a : b);
+        }
+
+        function reshuffleDeck() {
+            if (discardPile.length <= 1) return;
+            let top = discardPile.pop();
+            deck = discardPile;
+            discardPile = [top];
+            shuffle(deck);
+        }
+
+        let confettiParticles = [];
+        let confettiAnimation = null;
+        const confettiCanvas = document.getElementById('confetti-canvas');
+        const confettiCtx = confettiCanvas.getContext('2d');
+
+        function resizeConfetti() {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeConfetti);
+        resizeConfetti();
+
+        function startConfetti() {
+            confettiParticles = [];
+            const colors = ['#e74c3c', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#ffffff'];
+            for (let i = 0; i < 200; i++) {
+                confettiParticles.push({
+                    x: Math.random() * confettiCanvas.width,
+                    y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+                    w: Math.random() * 10 + 5,
+                    h: Math.random() * 10 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: Math.random() * 3 + 2,
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+            animateConfetti();
+            setTimeout(stopConfetti, 5000);
+        }
+
+        function animateConfetti() {
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            confettiParticles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.rotation += p.rotationSpeed;
+                if (p.y > confettiCanvas.height) {
+                    p.y = -10;
+                    p.x = Math.random() * confettiCanvas.width;
+                }
+                confettiCtx.save();
+                confettiCtx.translate(p.x, p.y);
+                confettiCtx.rotate(p.rotation * Math.PI / 180);
+                confettiCtx.fillStyle = p.color;
+                confettiCtx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+                confettiCtx.restore();
+            });
+            confettiAnimation = requestAnimationFrame(animateConfetti);
+        }
+
+        function stopConfetti() {
+            if (confettiAnimation) {
+                cancelAnimationFrame(confettiAnimation);
+                confettiAnimation = null;
+            }
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        }
+    </script>
 </body>
 </html>
